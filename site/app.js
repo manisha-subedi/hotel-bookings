@@ -6,6 +6,7 @@ const NS = "http://www.w3.org/2000/svg";
 const euro = (v) => "€" + Math.round(v).toLocaleString("en-GB");
 const pct = (v, d = 1) => (100 * v).toFixed(d) + "%";
 const num = (v) => Math.round(v).toLocaleString("en-GB");
+const euroShort = (v) => (v >= 1e6 ? "€" + (v / 1e6).toFixed(1) + "M" : euro(v));
 
 function svg(tag, attrs = {}, text) {
   const el = document.createElementNS(NS, tag);
@@ -146,7 +147,7 @@ function drawTiles() {
     ["Occupancy", pct(sold / available), num(sold) + " room nights sold"],
     ["ADR", euro(revenue / sold), "per room sold"],
     ["RevPAR", euro(revenue / available), "per room available"],
-    ["Revenue", euro(revenue), "from stays that happened"],
+    ["Revenue", euroShort(revenue), euro(revenue) + " from stays that happened"],
   ];
   const box = document.getElementById("tiles");
   box.replaceChildren(...tiles.map(([label, value, sub]) => {
