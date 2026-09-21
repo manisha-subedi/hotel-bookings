@@ -1,0 +1,13 @@
+[project]
+name = "hotel-bookings"
+version = "0.1.0"
+description = "Two hotels, 119,390 bookings: a star schema, real occupancy, and how many rooms to oversell."
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = ["duckdb>=1.1"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

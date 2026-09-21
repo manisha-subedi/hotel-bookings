@@ -1,0 +1,33 @@
+-- one row per booking, typed, with a real arrival date
+create or replace table stg_bookings as
+select
+    row_number() over () as booking_id,
+    hotel,
+    is_canceled = 1 as is_cancelled,
+    reservation_status,
+    lead_time,
+    cast(strptime(arrival_date_year || '-' || arrival_date_month || '-' || arrival_date_day_of_month, '%Y-%B-%d') as date) as arrival_date,
+    stays_in_weekend_nights + stays_in_week_nights as nights,
+    adults,
+    coalesce(children, 0) as children,
+    babies,
+    meal,
+    coalesce(country, 'unknown') as country,
+    market_segment,
+    distribution_channel,
+    is_repeated_guest = 1 as is_repeated_guest,
+    previous_cancellations,
+    previous_bookings_not_canceled,
+    reserved_room_type,
+    assigned_room_type,
+    booking_changes,
+    deposit_type,
+    agent,
+    company,
+    days_in_waiting_list,
+    customer_type,
+    adr,
+    required_car_parking_spaces,
+    total_of_special_requests,
+    reservation_status_date as status_date
+from read_csv('data/hotels.csv', nullstr = ['NA', 'NULL']);

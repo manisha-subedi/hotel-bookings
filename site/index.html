@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Two hotels, 119,390 bookings</title>
+  <meta name="description" content="A star schema, real occupancy, and how many rooms to oversell. Built on 119,390 real bookings from two hotels in Portugal.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="site-name" href="https://manisha-subedi.github.io/">Manisha Subedi</a>
+      <nav>
+        <a href="https://manisha-subedi.github.io/projects/">Projects</a>
+        <a href="https://github.com/manisha-subedi/hotel-bookings">Code</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <h1>Two hotels, 119,390 bookings</h1>
+    <p class="lede">
+      A resort hotel in the Algarve and a city hotel in Lisbon. Three years of
+      real bookings, July 2015 to August 2017. This page has three parts: the
+      numbers a manager looks at every month, a lookup for how often a booking
+      like this one cancels, and a tool that says how many rooms to oversell.
+    </p>
+
+    <div class="hotel-switch" role="group" aria-label="Choose a hotel">
+      <button type="button" data-hotel="all" class="is-on">Both hotels</button>
+      <button type="button" data-hotel="1">City Hotel, Lisbon</button>
+      <button type="button" data-hotel="2">Resort Hotel, Algarve</button>
+    </div>
+
+    <!-- part 1 -->
+    <section>
+      <h2>1. The numbers</h2>
+      <div class="tiles" id="tiles"></div>
+      <p class="note" id="rooms-note"></p>
+
+      <figure>
+        <h3>Occupancy by month</h3>
+        <div id="chart-occupancy"></div>
+        <figcaption>Rooms sold divided by rooms available. Rooms available is the hotel's room count times the days in the month. September 2017 is a partial month and is left out.</figcaption>
+      </figure>
+
+      <figure>
+        <h3>Average daily rate and RevPAR by month</h3>
+        <div id="chart-rates"></div>
+        <figcaption>ADR is revenue per room sold. RevPAR is revenue per room available, so it equals ADR times occupancy. Both in euros.</figcaption>
+      </figure>
+
+      <div class="two">
+        <figure>
+          <h3>Bookings by segment</h3>
+          <div id="chart-segments"></div>
+          <figcaption>Grey is the part that cancelled.</figcaption>
+        </figure>
+        <figure>
+          <h3>Cancellation by lead time</h3>
+          <div id="chart-lead"></div>
+          <figcaption>Days between booking and arrival. The longer the wait, the more often the booking cancels.</figcaption>
+        </figure>
+      </div>
+
+      <div class="two">
+        <figure>
+          <h3>Cancellation by deposit type</h3>
+          <div id="chart-deposit"></div>
+          <figcaption>Non-refundable bookings cancel almost every time. That is a sign of how the deposit was used, not of the guests.</figcaption>
+        </figure>
+        <figure>
+          <h3>Guests who stayed, by country</h3>
+          <div id="chart-countries"></div>
+          <figcaption>Top eight countries, bookings that were not cancelled.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- part 2 -->
+    <section>
+      <h2>2. Bookings like this one</h2>
+      <p>
+        Pick what you know about a booking. The page shows how often bookings
+        like it cancelled in these three years, and how many bookings that rate
+        rests on. It is a lookup of past bookings, not a prediction model.
+      </p>
+      <div class="picker" id="picker">
+        <label>Lead time, days
+          <select data-pick="lead_bucket">
+            <option value="0-7">0 to 7</option>
+            <option value="8-30">8 to 30</option>
+            <option value="31-90">31 to 90</option>
+            <option value="91-180">91 to 180</option>
+            <option value="181+" selected>181 or more</option>
+          </select>
+        </label>
+        <label>Deposit
+          <select data-pick="deposit_type">
+            <option value="No Deposit" selected>No deposit</option>
+            <option value="Non Refund">Non-refundable</option>
+            <option value="Refundable">Refundable</option>
+          </select>
+        </label>
+        <label>Booked through
+          <select data-pick="segment_group">
+            <option value="Online travel agent" selected>Online travel agent</option>
+            <option value="Offline agent or operator">Offline agent or operator</option>
+            <option value="Groups">Group booking</option>
+            <option value="Direct">Direct</option>
+            <option value="Corporate">Corporate</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        <label>Guest
+          <select data-pick="repeated">
+            <option value="false" selected>New guest</option>
+            <option value="true">Repeat guest</option>
+          </select>
+        </label>
+      </div>
+      <div class="lookup" id="lookup"></div>
+    </section>
+
+    <!-- part 3 -->
+    <section>
+      <h2>3. How many rooms to oversell</h2>
+      <p>
+        A hotel that sells exactly its room count ends most nights with empty
+        rooms, because some bookings cancel. Selling a few more is normal. The
+        question is how many. Too few, and rooms sit empty. Too many, and a
+        guest with a booking has to be sent to another hotel, which costs money
+        and goodwill.
+      </p>
+      <p>
+        The rate that matters is not the overall 37 percent. Most of those
+        cancellations happen weeks before arrival, when the room can still be
+        sold again. What matters is how many bookings still on the books a few
+        days before arrival will cancel or not show up. For the city hotel that
+        is 8.5 percent a week out, for the resort 4.8 percent. Pick the horizon,
+        or type your own rate.
+      </p>
+      <p>
+        Then set the cost of an empty room and the cost of sending a guest away.
+        The chart shows the expected cost per night for each number of extra
+        bookings. The lowest point is the answer.
+      </p>
+      <div class="picker" id="overbook-inputs">
+        <label>Rooms
+          <input type="number" data-ob="rooms" min="10" max="1000" step="1">
+        </label>
+        <label>Rate from bookings still on the books
+          <select data-ob="horizon">
+            <option value="1">1 day before arrival</option>
+            <option value="3">3 days before arrival</option>
+            <option value="7" selected>7 days before arrival</option>
+            <option value="14">14 days before arrival</option>
+            <option value="30">30 days before arrival</option>
+          </select>
+        </label>
+        <label>Cancellation rate, percent
+          <input type="number" data-ob="rate" min="0" max="99" step="0.1">
+        </label>
+        <label>Cost of an empty room, euros
+          <input type="number" data-ob="empty" min="0" max="2000" step="5">
+        </label>
+        <label>Cost of sending a guest away, euros
+          <input type="number" data-ob="walk" min="0" max="5000" step="10" value="300">
+        </label>
+      </div>
+      <div class="answer" id="overbook-answer"></div>
+      <figure>
+        <div id="chart-overbook"></div>
+        <figcaption>Expected cost per night for each number of bookings above the room count. Cancellations are treated as independent with the rate you set. The empty-room cost starts at the hotel's ADR. The cost of sending a guest away is a guess, change it to yours.</figcaption>
+      </figure>
+    </section>
+
+    <!-- how it is built -->
+    <section>
+      <h2>How it is built</h2>
+      <p>
+        The bookings file is one flat table with 32 columns. The first step
+        reshapes it into a star schema in DuckDB: one fact table of bookings,
+        one of occupied room nights, and four dimension tables. Arrival date and
+        cancellation date both point at the same date table.
+      </p>
+      <figure class="schema">
+        <svg viewBox="0 0 640 260" role="img" aria-label="Star schema: fact_booking in the centre linked to dim_date, dim_hotel, dim_customer and dim_channel, with fact_night below it">
+          <g class="box" transform="translate(240 96)">
+            <rect width="160" height="68" rx="6"></rect>
+            <text x="80" y="22" text-anchor="middle" class="t">fact_booking</text>
+            <text x="80" y="42" text-anchor="middle" class="s">119,390 rows</text>
+            <text x="80" y="58" text-anchor="middle" class="s">one per booking</text>
+          </g>
+          <g class="box dim" transform="translate(20 20)">
+            <rect width="150" height="52" rx="6"></rect>
+            <text x="75" y="22" text-anchor="middle" class="t">dim_date</text>
+            <text x="75" y="40" text-anchor="middle" class="s">every day, no gaps</text>
+          </g>
+          <g class="box dim" transform="translate(470 20)">
+            <rect width="150" height="52" rx="6"></rect>
+            <text x="75" y="22" text-anchor="middle" class="t">dim_hotel</text>
+            <text x="75" y="40" text-anchor="middle" class="s">2 hotels, room counts</text>
+          </g>
+          <g class="box dim" transform="translate(20 188)">
+            <rect width="150" height="52" rx="6"></rect>
+            <text x="75" y="22" text-anchor="middle" class="t">dim_customer</text>
+            <text x="75" y="40" text-anchor="middle" class="s">country, type, repeat</text>
+          </g>
+          <g class="box dim" transform="translate(470 188)">
+            <rect width="150" height="52" rx="6"></rect>
+            <text x="75" y="22" text-anchor="middle" class="t">dim_channel</text>
+            <text x="75" y="40" text-anchor="middle" class="s">segment, channel</text>
+          </g>
+          <g class="box fact2" transform="translate(240 188)">
+            <rect width="160" height="52" rx="6"></rect>
+            <text x="80" y="22" text-anchor="middle" class="t">fact_night</text>
+            <text x="80" y="40" text-anchor="middle" class="s">255,040 room nights</text>
+          </g>
+          <g class="lines">
+            <path d="M170 46 L240 110"></path>
+            <path d="M170 60 L240 124"></path>
+            <path d="M470 46 L400 110"></path>
+            <path d="M170 214 L240 150"></path>
+            <path d="M470 214 L400 150"></path>
+            <path d="M320 164 L320 188"></path>
+          </g>
+          <text x="196" y="66" class="s">arrival</text>
+          <text x="184" y="100" class="s">cancelled</text>
+        </svg>
+        <figcaption>Two arrows from the date table into the bookings: one for the arrival date, one for the date the booking was cancelled.</figcaption>
+      </figure>
+      <p>
+        The room count is not in the data, so it is estimated as the most rooms
+        ever occupied on one night: 226 for the city hotel, 187 for the resort.
+        Occupancy is rooms sold over rooms available. A common mistake is to
+        divide by booked nights instead, which gives 100 percent every month.
+        A test in the repo fails if that ever happens.
+      </p>
+      <p>
+        Everything on this page is computed from the tables at build time and
+        written as small JSON files. The page reads them and draws the charts.
+        No model, no server. The code, the SQL, and the tests are on
+        <a href="https://github.com/manisha-subedi/hotel-bookings">GitHub</a>.
+      </p>
+      <p class="note">
+        Data: Hotel booking demand, Antonio, de Almeida and Nunes, 2019,
+        published in Data in Brief under CC BY 4.0.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer"><p>© 2026 Manisha Subedi</p></footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+.venv/
+data/
+hotel.duckdb
+__pycache__/
+.pytest_cache/
