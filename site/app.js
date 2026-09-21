@@ -141,12 +141,12 @@ function drawTiles() {
   const sold = sum(months, "rooms_sold");
   const available = sum(months, "rooms_available");
   const tiles = [
-    ["Bookings", num(bookings), "three years"],
+    ["Bookings", num(bookings), "in three years"],
     ["Cancelled", pct(cancelled / bookings), num(cancelled) + " bookings"],
-    ["Occupancy", pct(sold / available), num(sold) + " room nights"],
-    ["ADR", euro(revenue / sold), "revenue per room sold"],
-    ["RevPAR", euro(revenue / available), "revenue per room available"],
-    ["Revenue", euro(revenue), "stays that happened"],
+    ["Occupancy", pct(sold / available), num(sold) + " room nights sold"],
+    ["ADR", euro(revenue / sold), "per room sold"],
+    ["RevPAR", euro(revenue / available), "per room available"],
+    ["Revenue", euro(revenue), "from stays that happened"],
   ];
   const box = document.getElementById("tiles");
   box.replaceChildren(...tiles.map(([label, value, sub]) => {
@@ -159,7 +159,8 @@ function drawTiles() {
     return d;
   }));
   document.getElementById("rooms-note").textContent =
-    hs.map((h) => `${h.hotel_name}: ${h.rooms} rooms, estimated from its busiest night.`).join(" ");
+    hs.map((h) => `${h.hotel_name} has about ${h.rooms} rooms.`).join(" ") +
+    (hs.length > 1 ? " I estimated these from the busiest night." : " I estimated this from the busiest night.");
 }
 
 function monthlySeries(key, format) {
@@ -225,7 +226,7 @@ function drawLookup() {
   const avg = sum(hs, "cancelled") / sum(hs, "bookings");
   const box = document.getElementById("lookup");
   if (n === 0) {
-    box.innerHTML = `<div class="big">No bookings</div><div class="row">There were no bookings like this one in the three years.</div>`;
+    box.innerHTML = `<div class="big">No bookings like this</div><div class="row">There were no bookings like this in the three years.</div>`;
     return;
   }
   const rate = c / n;
@@ -237,16 +238,17 @@ function drawLookup() {
     <div class="bar"><span></span><i></i></div>
     <div class="row muted"></div>
     <div class="row warn" hidden></div>`;
-  box.querySelector(".big").textContent = pct(rate) + " cancelled";
-  box.querySelector(".row").textContent = `${num(c)} of ${num(n)} bookings like this one cancelled.`;
+  box.querySelector(".big").textContent = pct(rate) + " got cancelled";
+  box.querySelector(".row").textContent = `${num(c)} of ${num(n)} bookings like this were cancelled.`;
   box.querySelector(".bar > span").style.width = pct(rate);
   box.querySelector(".bar > i").style.left = pct(avg);
+  const wobble = Math.max(1, Math.round(100 * 2 * se));
   box.querySelector(".row.muted").textContent =
-    `The mark is the average for ${hotel === "all" ? "both hotels" : hs[0].hotel_name}, ${pct(avg)}. ` +
-    `Give or take about ${Math.max(1, Math.round(100 * 2 * se))} point${Math.round(100 * 2 * se) > 1 ? "s" : ""} either way.`;
+    `The small black line is the average for ${hotel === "all" ? "both hotels" : "the " + hs[0].hotel_name}, ${pct(avg)}. ` +
+    `The true rate is probably within ${wobble} point${wobble > 1 ? "s" : ""} of this number.`;
   const warn = box.querySelector(".warn");
   warn.hidden = !small;
-  warn.textContent = "Fewer than 100 bookings. Treat this rate as rough.";
+  warn.textContent = "This comes from fewer than 100 bookings, so it is not very reliable.";
 }
 
 // ---------- part 3 ----------
@@ -291,13 +293,16 @@ function drawOverbook() {
 
   const box = document.getElementById("overbook-answer");
   box.innerHTML = `<div class="big"></div><div class="row"></div><div class="row"></div>`;
-  box.children[0].textContent = `Sell ${best.extra} more than you have`;
+  box.children[0].textContent = best.extra === 0
+    ? "Do not sell more than you have"
+    : `Sell ${best.extra} more room${best.extra > 1 ? "s" : ""} than you have`;
   box.children[1].textContent =
-    `${num(rooms + best.extra)} bookings for ${num(rooms)} rooms. On an average night that leaves ` +
-    `${best.empty.toFixed(1)} rooms empty and sends ${best.walked.toFixed(2)} guests away.`;
-  box.children[2].textContent =
-    `Expected cost ${euro(best.cost)} a night, against ${euro(base.cost)} with no overbooking. ` +
-    `That is ${euro(base.cost - best.cost)} a night, or about ${euro((base.cost - best.cost) * 365)} over a year of nights like this.`;
+    `That is ${num(rooms + best.extra)} bookings for ${num(rooms)} rooms. On a normal night, about ` +
+    `${best.empty.toFixed(1)} rooms stay empty and ${best.walked.toFixed(2)} guests have to be sent away.`;
+  box.children[2].textContent = best.extra === 0
+    ? `The expected cost is ${euro(best.cost)} per night. With these costs, selling extra rooms does not help.`
+    : `The expected cost is ${euro(best.cost)} per night. With no overbooking it would be ${euro(base.cost)}. ` +
+      `So this saves about ${euro(base.cost - best.cost)} per night. Over a year of nights like this, that is about ${euro((base.cost - best.cost) * 365)}.`;
 
   const f = frame(240, 60);
   const top = niceMax(Math.max(...points.map((q) => q.cost)));
@@ -309,13 +314,13 @@ function drawOverbook() {
   for (let e = 0; e <= maxExtra; e += step) {
     ax.append(svg("text", { x: xs(e), y: f.y1 + 18, "text-anchor": "middle" }, e));
   }
-  ax.append(svg("text", { x: (f.x0 + f.x1) / 2, y: f.y1 + 30, "text-anchor": "middle" }, "extra bookings above the room count"));
+  ax.append(svg("text", { x: (f.x0 + f.x1) / 2, y: f.y1 + 30, "text-anchor": "middle" }, "extra bookings, more than the number of rooms"));
   f.root.append(ax);
   const d = points.map((q, i) => `${i ? "L" : "M"}${xs(q.extra).toFixed(1)} ${ys(q.cost).toFixed(1)}`).join(" ");
   f.root.append(svg("path", { d, fill: "none", stroke: COLOR[hotel], "stroke-width": 2, "stroke-linejoin": "round" }));
   f.root.append(svg("line", { x1: xs(best.extra), x2: xs(best.extra), y1: f.y0, y2: f.y1, stroke: "#212529", "stroke-dasharray": "3 3" }));
   f.root.append(svg("circle", { cx: xs(best.extra), cy: ys(best.cost), r: 5, fill: COLOR[hotel], stroke: "#fff", "stroke-width": 2 }));
-  f.root.append(svg("text", { x: xs(best.extra) + 8, y: f.y0 + 12, class: "value" }, `lowest cost at ${best.extra}`));
+  f.root.append(svg("text", { x: xs(best.extra) + 8, y: f.y0 + 12, class: "value" }, `lowest cost is at ${best.extra}`));
   mount("chart-overbook", f.root);
 }
 
