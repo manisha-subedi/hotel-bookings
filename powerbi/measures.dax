@@ -77,18 +77,18 @@ Late cancellation rate 7 days = DIVIDE ( [Late cancellations 7 days], [On the bo
 
 // ---------- time intelligence, on fact_night ----------
 
-// dim_date must be marked as the date table for these to work
-Revenue last year = CALCULATE ( [Revenue], SAMEPERIODLASTYEAR ( dim_date[date] ) )
+// ALL ( dim_date ) makes these work even if dim_date is not marked as the date table
+Revenue last year = CALCULATE ( [Revenue], ALL ( dim_date ), SAMEPERIODLASTYEAR ( dim_date[date] ) )
 
 Revenue change vs last year = DIVIDE ( [Revenue] - [Revenue last year], [Revenue last year] )
 
-Occupancy last year = CALCULATE ( [Occupancy], SAMEPERIODLASTYEAR ( dim_date[date] ) )
+Occupancy last year = CALCULATE ( [Occupancy], ALL ( dim_date ), SAMEPERIODLASTYEAR ( dim_date[date] ) )
 
 Occupancy change vs last year = [Occupancy] - [Occupancy last year]
 
-Revenue year to date = TOTALYTD ( [Revenue], dim_date[date] )
+Revenue year to date = CALCULATE ( [Revenue], ALL ( dim_date ), DATESYTD ( dim_date[date] ) )
 
-Room nights last month = CALCULATE ( [Room nights], DATEADD ( dim_date[date], -1, MONTH ) )
+Room nights last month = CALCULATE ( [Room nights], ALL ( dim_date ), DATEADD ( dim_date[date], -1, MONTH ) )
 
 // ---------- customers and channels, on fact_booking ----------
 
