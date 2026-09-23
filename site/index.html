@@ -26,12 +26,41 @@
       years, from July 2015 to August 2017.
     </p>
     <p class="lede">
-      I made three things from it. First, the numbers a hotel manager checks
-      every month. Second, a small tool that tells you how often a booking like
-      yours gets cancelled. Third, a tool that tells the hotel how many extra
-      rooms it can sell.
+      First I built a Power BI report from it. Then I made this page from the
+      same data, with three parts: the numbers a hotel manager checks every
+      month, a small tool that tells you how often a booking like yours gets
+      cancelled, and a tool that tells the hotel how many extra rooms it can
+      sell.
     </p>
 
+    <!-- power bi -->
+    <section class="powerbi">
+      <h2>The Power BI report</h2>
+      <p>
+        Five pages. Overview, demand and channels, customers, cancellations,
+        and a booking detail page you can drill into from any chart. The data
+        model is a star schema with six tables and 43 DAX measures. The numbers
+        are the same as on this page.
+      </p>
+      <p>
+        <a class="button" href="powerbi/hotel-bookings.pdf">Open the report, PDF, 5 pages</a>
+      </p>
+      <div class="pages">
+        <a href="powerbi/hotel-bookings.pdf"><img src="powerbi/page-1-overview.png" alt="Page 1, overview: six KPI cards, occupancy by month, ADR and RevPAR by month" loading="lazy" width="1600" height="913"><span>1. Overview</span></a>
+        <a href="powerbi/hotel-bookings.pdf"><img src="powerbi/page-2-demand-and-channels.png" alt="Page 2, demand and channels: bookings by segment, by country, and cancellation rate by lead time" loading="lazy" width="1600" height="913"><span>2. Demand and channels</span></a>
+        <a href="powerbi/hotel-bookings.pdf"><img src="powerbi/page-3-customers.png" alt="Page 3, customers: repeat guest share, cancellation rates, bookings by customer type, nights and guests per booking" loading="lazy" width="1600" height="913"><span>3. Customers</span></a>
+        <a href="powerbi/hotel-bookings.pdf"><img src="powerbi/page-4-cancellations.png" alt="Page 4, cancellations: by cancel date, by arrival month, by deposit type, late cancellation rate, revenue change versus last year" loading="lazy" width="1600" height="913"><span>4. Cancellations</span></a>
+        <a href="powerbi/hotel-bookings.pdf"><img src="powerbi/page-5-booking-detail.png" alt="Page 5, booking detail: a drill-through table of single bookings" loading="lazy" width="1600" height="913"><span>5. Booking detail, drill-through</span></a>
+        <a href="powerbi/model.png"><img src="powerbi/model.png" alt="The data model in Power BI: six tables, seven relationships, one of them inactive" loading="lazy" width="1615" height="488"><span>The model, six tables and seven relationships</span></a>
+      </div>
+      <p class="note">
+        Click any page to open the PDF. The measures are in
+        <a href="https://github.com/manisha-subedi/hotel-bookings/blob/main/powerbi/measures.dax">measures.dax</a>
+        on GitHub, with one line under each saying what it does.
+      </p>
+    </section>
+
+    <h2>The same data, as a web page</h2>
     <div class="hotel-switch" role="group" aria-label="Choose a hotel">
       <button type="button" data-hotel="all" class="is-on">Both hotels</button>
       <button type="button" data-hotel="1">City Hotel, Lisbon</button>

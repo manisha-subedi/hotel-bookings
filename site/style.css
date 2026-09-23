@@ -74,6 +74,29 @@ p { margin: 0 0 1rem; max-width: 730px; }
 .tile .value { display: block; font-size: 1.5rem; font-weight: 600; line-height: 1.2; margin-top: 2px; white-space: nowrap; }
 .tile .sub { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
 
+.button {
+  display: inline-block;
+  padding: 8px 14px;
+  border: 1px solid #212529;
+  border-radius: 4px;
+  color: #212529;
+  font-size: 0.95rem;
+}
+.button:hover { background: #212529; color: #fff; text-decoration: none; }
+
+.pages {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 24px;
+  margin: 8px 0 12px;
+}
+@media (max-width: 700px) { .pages { grid-template-columns: 1fr; } }
+.pages a { display: block; color: var(--text); }
+.pages a:hover { text-decoration: none; }
+.pages a:hover img { border-color: #212529; }
+.pages img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+.pages span { display: block; margin-top: 6px; font-size: 0.85rem; color: #495057; }
+
 figure { margin: 24px 0 28px; }
 figure svg { display: block; width: 100%; height: auto; }
 figcaption { margin-top: 8px; color: var(--muted); font-size: 0.85rem; max-width: 730px; }

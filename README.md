@@ -25,6 +25,21 @@ City Hotel: 226 rooms (estimated from the busiest night)
 Resort Hotel: 187 rooms (estimated from the busiest night)
 ```
 
+## The Power BI report
+
+The same data as a Power BI report, five pages: overview, demand and
+channels, customers, cancellations, and a booking detail page you can drill
+into. The model is the star schema below, loaded from `powerbi/hotel-bookings-tables.xlsx`,
+with seven relationships and 43 DAX measures.
+
+- `powerbi/hotel-bookings.pdf`, the five pages
+- `powerbi/page-1-overview.png` to `page-5-booking-detail.png`, one image per page
+- `powerbi/model.png`, the model view
+- `powerbi/measures.dax`, the measures, one line under each saying what it does
+- `powerbi/GUIDE.md` and `GUIDE-web.md`, how to build it in Power BI Desktop or in the browser
+
+![Page 1, overview](powerbi/page-1-overview.png)
+
 ## How to run it
 
 ```bash
