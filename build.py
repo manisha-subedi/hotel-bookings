@@ -146,12 +146,14 @@ def export_powerbi(con):
 
 
 def report(con):
-    q = lambda s: con.execute(s).fetchone()
+    def value(sql):
+        return con.execute(sql).fetchone()[0]
+
     print()
-    print("bookings:", q("select count(*) from fact_booking")[0])
-    print("cancelled: %.1f%%" % (100 * q("select avg(is_cancelled::int) from fact_booking")[0]))
-    print("cancelled, lead 181+: %.1f%%" % (100 * q("select avg(is_cancelled::int) from fact_booking where lead_bucket = '181+'")[0]))
-    print("cancelled, repeat guests: %.1f%%" % (100 * q("select avg(f.is_cancelled::int) from fact_booking f join dim_customer c using (customer_key) where c.is_repeated_guest")[0]))
+    print("bookings:", value("select count(*) from fact_booking"))
+    print("cancelled: %.1f%%" % (100 * value("select avg(is_cancelled::int) from fact_booking")))
+    print("cancelled, lead 181+: %.1f%%" % (100 * value("select avg(is_cancelled::int) from fact_booking where lead_bucket = '181+'")))
+    print("cancelled, repeat guests: %.1f%%" % (100 * value("select avg(f.is_cancelled::int) from fact_booking f join dim_customer c using (customer_key) where c.is_repeated_guest")))
     for name, pct in con.execute("""
         select h.hotel_name, round(100.0 * avg(f.is_cancelled::int), 1)
         from fact_booking f join dim_hotel h using (hotel_key) join dim_date d on d.date_key = f.status_date_key
