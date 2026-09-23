@@ -1,0 +1,129 @@
+// DAX measures for the hotel bookings report.
+// Create each one on the table named in the comment. Home tab > New measure, paste one block, press Enter.
+// Lines that start with // are notes. Do not paste them.
+
+// ---------- basics, on fact_booking ----------
+
+// how many bookings
+Bookings = COUNTROWS ( fact_booking )
+
+// how many of them were cancelled or did not show up
+Cancelled bookings = CALCULATE ( [Bookings], fact_booking[is_cancelled] = TRUE () )
+
+// bookings that turned into a stay
+Stayed bookings = [Bookings] - [Cancelled bookings]
+
+// share of bookings that cancelled
+Cancellation rate = DIVIDE ( [Cancelled bookings], [Bookings] )
+
+// average days between booking and arrival
+Average lead time = AVERAGE ( fact_booking[lead_time] )
+
+// average length of stay, for bookings that stayed
+Average nights = CALCULATE ( AVERAGE ( fact_booking[nights] ), fact_booking[is_cancelled] = FALSE () )
+
+// people per booking
+Guests per booking = AVERAGEX ( fact_booking, fact_booking[adults] + fact_booking[children] + fact_booking[babies] )
+
+// money the hotel did not get because the booking cancelled
+Lost revenue = SUMX ( FILTER ( fact_booking, fact_booking[is_cancelled] = TRUE () ), fact_booking[adr] * fact_booking[nights] )
+
+// ---------- rooms and money, on fact_night ----------
+
+// one row in fact_night is one room for one night
+Room nights = COUNTROWS ( fact_night )
+
+// adr in fact_night is the price of that one night, so the sum is revenue
+Revenue = SUM ( fact_night[adr] )
+
+// rooms in the hotel, from dim_hotel
+Rooms = SUM ( dim_hotel[rooms] )
+
+// rooms times days. VALUES ( dim_date[date] ) gives the days in the current filter.
+// set a report filter on dim_date[date] from 2015-07-01 to 2017-08-31, so the total is not over the whole date table.
+Rooms available = SUMX ( VALUES ( dim_date[date] ), [Rooms] )
+
+// share of rooms that were sold. never divide by room nights, that gives 100 percent every time.
+Occupancy = DIVIDE ( [Room nights], [Rooms available] )
+
+// average daily rate: revenue per room sold
+ADR = DIVIDE ( [Revenue], [Room nights] )
+
+// revenue per available room: revenue per room the hotel has, sold or not
+RevPAR = DIVIDE ( [Revenue], [Rooms available] )
+
+// must equal RevPAR. put both in a card and check.
+RevPAR check = [ADR] * [Occupancy]
+
+// revenue per booking that stayed
+Revenue per stay = DIVIDE ( [Revenue], [Stayed bookings] )
+
+// ---------- the second date relationship, on fact_booking ----------
+
+// the active relationship is arrival date. this one switches to the cancel date.
+// so a chart of this measure by month shows when bookings were cancelled, not when they would have arrived.
+Cancellations by cancel date = CALCULATE ( [Cancelled bookings], USERELATIONSHIP ( fact_booking[status_date_key], dim_date[date_key] ) )
+
+// ---------- late cancellations, on fact_booking ----------
+
+// bookings that were still on the books 7 days before arrival
+On the books 7 days before = CALCULATE ( [Bookings], FILTER ( fact_booking, fact_booking[is_cancelled] = FALSE () || fact_booking[status_date] > fact_booking[arrival_date] - 7 ) )
+
+// of those, the ones that still cancelled
+Late cancellations 7 days = CALCULATE ( [Cancelled bookings], FILTER ( fact_booking, fact_booking[status_date] > fact_booking[arrival_date] - 7 ) )
+
+// the rate that matters for overbooking
+Late cancellation rate 7 days = DIVIDE ( [Late cancellations 7 days], [On the books 7 days before] )
+
+// ---------- time intelligence, on fact_night ----------
+
+// dim_date must be marked as the date table for these to work
+Revenue last year = CALCULATE ( [Revenue], SAMEPERIODLASTYEAR ( dim_date[date] ) )
+
+Revenue change vs last year = DIVIDE ( [Revenue] - [Revenue last year], [Revenue last year] )
+
+Occupancy last year = CALCULATE ( [Occupancy], SAMEPERIODLASTYEAR ( dim_date[date] ) )
+
+Occupancy change vs last year = [Occupancy] - [Occupancy last year]
+
+Revenue year to date = TOTALYTD ( [Revenue], dim_date[date] )
+
+Room nights last month = CALCULATE ( [Room nights], DATEADD ( dim_date[date], -1, MONTH ) )
+
+// ---------- customers and channels, on fact_booking ----------
+
+Repeat guest bookings = CALCULATE ( [Bookings], dim_customer[is_repeated_guest] = TRUE () )
+
+Repeat guest share = DIVIDE ( [Repeat guest bookings], [Bookings] )
+
+Repeat guest cancellation rate = CALCULATE ( [Cancellation rate], dim_customer[is_repeated_guest] = TRUE () )
+
+New guest cancellation rate = CALCULATE ( [Cancellation rate], dim_customer[is_repeated_guest] = FALSE () )
+
+// ALL ( dim_channel ) removes the segment filter, so this is this segment's share of all bookings
+Share of bookings = DIVIDE ( [Bookings], CALCULATE ( [Bookings], ALL ( dim_channel ) ) )
+
+// this hotel's share of all revenue
+Share of revenue = DIVIDE ( [Revenue], CALCULATE ( [Revenue], ALL ( dim_hotel ) ) )
+
+Cancellation rate no deposit = CALCULATE ( [Cancellation rate], fact_booking[deposit_type] = "No Deposit" )
+
+Cancellation rate 181 plus days = CALCULATE ( [Cancellation rate], fact_booking[lead_bucket] = "181+" )
+
+Bookings with special requests = CALCULATE ( [Bookings], fact_booking[total_of_special_requests] > 0 )
+
+Special request share = DIVIDE ( [Bookings with special requests], [Bookings] )
+
+// ---------- labels, on fact_booking ----------
+
+// a sentence for a card. VAR keeps it readable.
+Cancellation summary =
+VAR rate = [Cancellation rate]
+VAR n = [Cancelled bookings]
+RETURN FORMAT ( n, "#,0" ) & " cancelled, " & FORMAT ( rate, "0.0%" ) & " of bookings"
+
+// a sentence for the occupancy card
+Occupancy summary =
+VAR occ = [Occupancy]
+VAR sold = [Room nights]
+RETURN FORMAT ( sold, "#,0" ) & " room nights sold, " & FORMAT ( occ, "0.0%" ) & " occupancy"

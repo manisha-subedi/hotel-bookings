@@ -127,6 +127,24 @@ def export(con):
     print(f"wrote {len(list(OUT.glob('*.json')))} files to {OUT}")
 
 
+def export_powerbi(con):
+    """Six csv files for Power BI. The star schema, one file per table."""
+    out = Path("powerbi/data")
+    out.mkdir(parents=True, exist_ok=True)
+    con.execute("""
+        create or replace view pbi_fact_booking as
+        select f.*, d.date as status_date
+        from fact_booking f join dim_date d on d.date_key = f.status_date_key
+    """)
+    tables = {
+        "dim_date": "dim_date", "dim_hotel": "dim_hotel", "dim_customer": "dim_customer",
+        "dim_channel": "dim_channel", "fact_booking": "pbi_fact_booking", "fact_night": "fact_night",
+    }
+    for name, source in tables.items():
+        con.execute(f"copy (select * from {source}) to '{out / name}.csv' (header, delimiter ',')")
+    print(f"wrote {len(tables)} csv files to {out}")
+
+
 def report(con):
     q = lambda s: con.execute(s).fetchone()
     print()
@@ -149,6 +167,7 @@ def main():
     con = duckdb.connect(DB)
     build(con)
     export(con)
+    export_powerbi(con)
     report(con)
 
 
