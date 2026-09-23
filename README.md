@@ -93,7 +93,7 @@ rate. For each number of extra bookings, it calculates expected empty
 rooms and relocated guests, then applies the costs entered by the user.
 
 The lowest-cost result is a model estimate under those assumptions, not an
-operational recommendation. The default empty-room cost uses ADR; the
+operational recommendation. The default empty-room cost uses ADR. The
 relocation cost is illustrative. Annual cost differences assume the same
 conditions every night and should not be read as forecast savings.
 
