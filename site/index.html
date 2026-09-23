@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Two hotels, 119,390 bookings</title>
-  <meta name="description" content="Real booking data from two hotels in Portugal. The monthly numbers, how often a booking cancels, and how many extra rooms a hotel can sell.">
+  <meta name="description" content="Booking and revenue analysis for two hotels in Portugal, with a Power BI report, cancellation lookup, and overbooking scenarios.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -21,29 +21,25 @@
   <main class="page">
     <h1>Two hotels, 119,390 bookings</h1>
     <p class="lede">
-      This is real booking data from two hotels in Portugal. One is a resort in
-      the Algarve. The other is a city hotel in Lisbon. The data covers three
-      years, from July 2015 to August 2017.
+      An analysis of booking data from a resort in the Algarve and a city hotel
+      in Lisbon, covering July 2015 to August 2017.
     </p>
     <p class="lede">
-      First I built a Power BI report from it. Then I made this page from the
-      same data, with three parts: the numbers a hotel manager checks every
-      month, a small tool that tells you how often a booking like yours gets
-      cancelled, and a tool that tells the hotel how many extra rooms it can
-      sell.
+      I built a Power BI report and this web version from the same source data.
+      Below are monthly performance charts, a lookup of historical cancellation
+      rates, and a calculator for exploring overbooking costs.
     </p>
 
     <!-- power bi -->
     <section class="powerbi">
       <h2>The Power BI report</h2>
       <p>
-        The report has an overview, demand and channels, customers,
-        cancellations, and a page with the single bookings behind any chart.
-        The data model is a star schema with six tables and 43 DAX measures.
-        The numbers are the same as on this page.
+        The five pages cover overall performance, demand and channels,
+        customers, cancellations, and individual booking details. The report
+        uses a six-table star schema and DAX measures.
       </p>
       <p>
-        <a class="button" href="powerbi/hotel-bookings.pdf">Open the report</a>
+        <a class="button" href="powerbi/hotel-bookings.pdf">View report PDF</a>
       </p>
       <div class="pages">
         <a href="powerbi/hotel-bookings.pdf"><img src="powerbi/page-1-overview.png" alt="Page 1, overview: six KPI cards, occupancy by month, ADR and RevPAR by month" loading="lazy" width="1600" height="913"><span>1. Overview</span></a>
@@ -56,46 +52,46 @@
       <p class="note">
         Click any page to open the PDF. The measures are in
         <a href="https://github.com/manisha-subedi/hotel-bookings/blob/main/powerbi/measures.dax">measures.dax</a>
-        on GitHub, with one line under each saying what it does.
+        on GitHub, with comments explaining the calculations.
       </p>
     </section>
 
-    <h2>The same data, as a web page</h2>
+    <h2>Explore the data</h2>
     <div class="hotel-switch" role="group" aria-label="Choose a hotel">
       <button type="button" data-hotel="all" class="is-on">Both hotels</button>
       <button type="button" data-hotel="1">City Hotel, Lisbon</button>
       <button type="button" data-hotel="2">Resort Hotel, Algarve</button>
     </div>
-    <p class="note">Pick a hotel. Everything below changes with it.</p>
+    <p class="note">Select a hotel to update the charts and calculators below.</p>
 
     <!-- part 1 -->
     <section>
-      <h2>1. The monthly numbers</h2>
+      <h2>1. Hotel performance</h2>
       <div class="tiles" id="tiles"></div>
       <p class="note" id="rooms-note"></p>
 
       <figure>
         <h3>Occupancy by month</h3>
         <div id="chart-occupancy"></div>
-        <figcaption>Occupancy is rooms sold divided by rooms available. Rooms available is the number of rooms in the hotel times the days in the month. I left out September 2017 because the data only has half of that month.</figcaption>
+        <figcaption>Occupancy is occupied room nights divided by available room nights. Availability uses the estimated room count multiplied by the days in each month. September 2017 is excluded because it is incomplete.</figcaption>
       </figure>
 
       <figure>
         <h3>Average daily rate and RevPAR by month</h3>
         <div id="chart-rates"></div>
-        <figcaption>ADR is the money the hotel makes per room it sold. RevPAR is the money it makes per room it has, sold or not. So RevPAR is always lower. Both are in euros.</figcaption>
+        <figcaption>Average daily rate (ADR) is revenue per occupied room night. Revenue per available room (RevPAR) also accounts for empty rooms. Both are shown in euros.</figcaption>
       </figure>
 
       <div class="two">
         <figure>
           <h3>Bookings by segment</h3>
           <div id="chart-segments"></div>
-          <figcaption>The grey part of each bar is the bookings that got cancelled.</figcaption>
+          <figcaption>The grey portion shows cancelled bookings.</figcaption>
         </figure>
         <figure>
           <h3>Cancellation by lead time</h3>
           <div id="chart-lead"></div>
-          <figcaption>Lead time is how many days before arrival the booking was made. When people book far ahead, they cancel more often.</figcaption>
+          <figcaption>Lead time is the number of days between booking and arrival. In this dataset, bookings made further ahead had higher cancellation rates.</figcaption>
         </figure>
       </div>
 
@@ -103,26 +99,27 @@
         <figure>
           <h3>Cancellation by deposit type</h3>
           <div id="chart-deposit"></div>
-          <figcaption>Almost all non-refundable bookings got cancelled. This looks strange. It probably means the hotel used this deposit type for a special kind of booking, not that these guests are worse.</figcaption>
+          <figcaption>Almost all bookings labelled non-refundable were cancelled. The data does not explain why, so this result should not be treated as evidence that the deposit policy caused cancellations.</figcaption>
         </figure>
         <figure>
-          <h3>Guests by country</h3>
+          <h3>Bookings by guest country</h3>
           <div id="chart-countries"></div>
-          <figcaption>The eight countries with the most guests. Only bookings that were not cancelled.</figcaption>
+          <figcaption>The eight countries with the most non-cancelled bookings.</figcaption>
         </figure>
       </div>
     </section>
 
     <!-- part 2 -->
     <section>
-      <h2>2. How often does a booking like this cancel?</h2>
+      <h2>2. Cancellation rates for similar bookings</h2>
       <p>
-        Tell me four things about a booking. I will show you how often bookings
-        like that were cancelled in these three years. I also show how many
-        bookings the number comes from, so you know if you can trust it.
+        Choose a lead time, deposit type, booking channel, and guest type to
+        see the cancellation rate for matching bookings. The result includes
+        the number of observations behind the rate.
       </p>
       <p>
-        This is not a prediction. It is just counting what happened before.
+        This summarises historical bookings; it does not predict whether a
+        future booking will be cancelled.
       </p>
       <div class="picker" id="picker">
         <label>Lead time, in days
@@ -163,37 +160,34 @@
 
     <!-- part 3 -->
     <section>
-      <h2>3. How many extra rooms can the hotel sell?</h2>
+      <h2>3. Exploring overbooking costs</h2>
       <p>
-        Hotels sell more rooms than they have. This sounds strange, but it makes
-        sense. Some bookings always cancel. If the hotel sells exactly its number
-        of rooms, some rooms stay empty every night. So hotels sell a bit more.
-        The question is, how much more?
+        A hotel may accept more bookings than it has rooms to allow for
+        cancellations. This can reduce empty rooms, but it also creates a risk
+        of having to relocate guests when too many arrive.
       </p>
       <p>
-        If they sell too few, rooms stay empty. If they sell too many, a guest
-        arrives and there is no room. The hotel has to send them to another
-        hotel and pay for it. Both are bad. This tool finds the best middle.
+        This calculator compares the expected costs of different overbooking
+        levels. Its lowest-cost result depends on the assumptions you enter;
+        it is an illustration, not a recommendation for operating a hotel.
       </p>
       <p>
-        One important thing. The right cancellation rate is not the 37 percent
-        from above. Most of those bookings cancel weeks before arrival, and the
-        hotel sells the room again. What matters is the bookings that are still
-        there a few days before arrival. How many of those still cancel or do
-        not show up? For the city hotel it is 8.5 percent one week before. For
-        the resort it is 4.8 percent. You can pick a different number of days,
-        or type your own rate.
+        The relevant rate is for bookings still active shortly before arrival,
+        rather than the overall cancellation rate of 37 percent. Earlier
+        cancellations leave more time to resell the room. Among bookings active
+        one week before arrival, 8.5 percent at the city hotel and 4.8 percent
+        at the resort later cancelled or did not show up. Select another
+        timeframe or enter your own rate below.
       </p>
       <p>
-        Then set two costs. What does an empty room cost the hotel? What does it
-        cost to send a guest away? The chart shows the expected cost for each
-        number of extra bookings. The lowest point is the best number.
+        Set the cost of an empty room and the cost of relocating a guest. The
+        chart shows how the expected nightly cost changes with extra bookings.
       </p>
       <div class="picker" id="overbook-inputs">
         <label>Rooms in the hotel
           <input type="number" data-ob="rooms" min="10" max="1000" step="1">
         </label>
-        <label>Cancel rate from bookings still active
+        <label>Bookings active before arrival
           <select data-ob="horizon">
             <option value="1">1 day before arrival</option>
             <option value="3">3 days before arrival</option>
@@ -202,20 +196,20 @@
             <option value="30">30 days before arrival</option>
           </select>
         </label>
-        <label>Cancel rate, in percent
+        <label>Cancellation rate (%)
           <input type="number" data-ob="rate" min="0" max="99" step="0.1">
         </label>
-        <label>Cost of one empty room, in euros
+        <label>Cost per empty room (€)
           <input type="number" data-ob="empty" min="0" max="2000" step="5">
         </label>
-        <label>Cost of sending one guest away, in euros
+        <label>Cost per relocated guest (€)
           <input type="number" data-ob="walk" min="0" max="5000" step="10" value="300">
         </label>
       </div>
       <div class="answer" id="overbook-answer"></div>
       <figure>
         <div id="chart-overbook"></div>
-        <figcaption>This is the expected cost per night for each number of extra bookings. I assume each booking cancels on its own, with the rate you set. The empty room cost starts at the hotel's ADR. The cost of sending a guest away is my guess. Change it to what makes sense for you.</figcaption>
+        <figcaption>The model assumes independent cancellations at the selected rate. The empty-room cost defaults to ADR, and the relocation cost is an illustrative assumption. Adjust both to compare scenarios.</figcaption>
       </figure>
     </section>
 
@@ -223,11 +217,10 @@
     <section>
       <h2>How I built this</h2>
       <p>
-        The data comes as one big flat table with 32 columns. First, I split it
-        into a star schema in DuckDB. That means one main table of bookings, one
-        table of room nights, and four small tables for dates, hotels, customers,
-        and booking channels. The date table is used two times. Once for the
-        arrival date, and once for the day the booking was cancelled.
+        I used DuckDB to turn the original 32-column dataset into a star schema:
+        two fact tables for bookings and room nights, plus dimensions for dates,
+        hotels, customers, and booking channels. Separate date relationships
+        let the report analyse bookings by arrival date or cancellation date.
       </p>
       <figure class="schema">
         <svg viewBox="0 0 640 260" role="img" aria-label="Star schema: fact_booking in the centre linked to dim_date, dim_hotel, dim_customer and dim_channel, with fact_night below it">
@@ -273,24 +266,22 @@
           <text x="196" y="66" class="s">arrival</text>
           <text x="184" y="100" class="s">cancelled</text>
         </svg>
-        <figcaption>The two arrows from the date table go into the bookings table. One is for the arrival date. One is for the day the booking was cancelled.</figcaption>
+        <figcaption>The bookings table has separate relationships for arrival and cancellation dates.</figcaption>
       </figure>
       <p>
-        The data does not say how many rooms each hotel has. So I estimated it.
-        I looked for the night with the most rooms occupied. That gives 226
-        rooms for the city hotel and 187 for the resort. Then occupancy is rooms
-        sold divided by rooms available.
+        Room capacity is not provided, so I estimated it from each hotel's
+        busiest occupied night: 226 rooms for the city hotel and 187 for the
+        resort. Occupancy and RevPAR depend on these estimates.
       </p>
       <p>
-        A common mistake is to divide by booked nights instead. That gives 100
-        percent every month, which is wrong. I wrote a test that fails if this
-        ever happens.
+        Occupancy must use available room nights as its denominator. Dividing
+        occupied nights by themselves would incorrectly produce 100 percent
+        for every month. A test checks for this problem in the dataset.
       </p>
       <p>
-        All the numbers on this page are computed once, when the site is built,
-        and saved as small JSON files. The page reads them and draws the charts.
-        There is no server and no machine learning model. The code, the SQL, and
-        the tests are on
+        The build saves the prepared data as JSON files. The browser reads
+        these files to draw the charts and run the calculators, without a
+        backend service or machine learning model. The code, SQL, and tests are on
         <a href="https://github.com/manisha-subedi/hotel-bookings">GitHub</a>.
       </p>
       <p class="note">

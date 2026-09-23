@@ -1,46 +1,40 @@
 # Two hotels, 119,390 bookings
 
-Live page: https://manisha-subedi.github.io/hotel-bookings/
+[View the project](https://manisha-subedi.github.io/hotel-bookings/)
 
-This is real booking data from two hotels in Portugal. One is a resort in the
-Algarve, the other is a city hotel in Lisbon. The data covers three years,
-from July 2015 to August 2017.
+Booking and revenue analysis for a resort in the Algarve and a city hotel
+in Lisbon, covering July 2015 to August 2017.
 
-I made three things from it:
-
-1. The numbers a hotel manager checks every month. Occupancy, ADR, RevPAR,
-   bookings by segment, and cancellations by lead time and deposit.
-2. A small tool. You say four things about a booking, and it tells you how
-   often bookings like that were cancelled.
-3. An overbooking tool. It tells the hotel how many extra rooms it can sell,
-   and why.
+The project includes a Power BI report and a web page with monthly charts,
+a historical cancellation lookup, and an overbooking cost calculator.
 
 ```
-bookings: 119390
-cancelled: 37.0%
-cancelled, lead 181+: 57.0%
-City Hotel: 8.5% of bookings still on the books 7 days before arrival cancelled
-Resort Hotel: 4.8% of bookings still on the books 7 days before arrival cancelled
-City Hotel: 226 rooms (estimated from the busiest night)
-Resort Hotel: 187 rooms (estimated from the busiest night)
+Bookings: 119,390
+Cancellation rate: 37.0%
+Cancellation rate for lead times of 181+ days: 57.0%
+Late cancellation or no-show rate, active 7 days before arrival:
+  City Hotel: 8.5%
+  Resort Hotel: 4.8%
+Estimated capacity:
+  City Hotel: 226 rooms
+  Resort Hotel: 187 rooms
 ```
 
-## The Power BI report
+## Power BI report
 
-The same data as a Power BI report, five pages: overview, demand and
-channels, customers, cancellations, and a booking detail page you can drill
-into. The model is the star schema below, loaded from `powerbi/hotel-bookings-tables.xlsx`,
-with seven relationships and 43 DAX measures.
+The five pages cover overall performance, demand and channels, customers,
+cancellations, and individual booking details. The model loads six tables
+from `powerbi/hotel-bookings-tables.xlsx` and uses seven relationships.
 
-- `powerbi/hotel-bookings.pdf`, the five pages
-- `powerbi/page-1-overview.png` to `page-5-booking-detail.png`, one image per page
-- `powerbi/model.png`, the model view
-- `powerbi/measures.dax`, the measures, one line under each saying what it does
-- `powerbi/GUIDE.md` and `GUIDE-web.md`, how to build it in Power BI Desktop or in the browser
+- `powerbi/hotel-bookings.pdf`: the report export.
+- `powerbi/page-1-overview.png` to `page-5-booking-detail.png`: page images.
+- `powerbi/model.png`: the data model.
+- `powerbi/measures.dax`: DAX measures with explanatory comments.
+- `powerbi/GUIDE.md` and `GUIDE-web.md`: setup instructions.
 
 ![Page 1, overview](powerbi/page-1-overview.png)
 
-## How to run it
+## Run the project
 
 ```bash
 uv venv && uv pip install -e ".[dev]"
@@ -49,56 +43,61 @@ pytest
 python -m http.server --directory site
 ```
 
-`build.py` downloads the CSV, builds the tables in `hotel.duckdb`, and writes
-four small JSON files to `site/data/`. The page reads those files and draws
-the charts. There is no server and no model.
+`build.py` downloads the CSV, builds the tables in `hotel.duckdb`, and
+writes four JSON files to `site/data/`. The browser reads these files to
+draw the charts and run the calculators. No backend service or machine
+learning model is required.
 
-## The tables
+## Data model
 
-The data comes as one flat table with 32 columns. The files in `sql/` turn it
-into a star schema. They run in order, one file per table.
+The source is a flat table with 32 columns. The SQL files transform it into
+the following tables:
 
-| Table | Rows | What it is |
+| Table | Rows | Description |
 |---|---|---|
-| `dim_date` | 1,064 | every day from the first status date to the last departure, no gaps |
-| `dim_hotel` | 2 | hotel, location, and the room count |
-| `dim_customer` | 448 | country, customer type, new or repeat guest |
-| `dim_channel` | 26 | market segment and distribution channel |
-| `fact_booking` | 119,390 | one row per booking |
-| `fact_night` | 255,040 | one row per occupied room night |
-| `kpi_hotel_month` | 54 | occupancy, ADR, RevPAR per hotel per month |
+| `dim_date` | 1,064 | Continuous dates from the first status date to the last departure |
+| `dim_hotel` | 2 | Hotel, location, and estimated room capacity |
+| `dim_customer` | 448 | Country, customer type, and repeat-guest status |
+| `dim_channel` | 26 | Market segment and distribution channel |
+| `fact_booking` | 119,390 | One row per booking |
+| `fact_night` | 255,040 | One row per occupied room night |
+| `kpi_hotel_month` | 54 | Monthly occupancy, ADR, and RevPAR by hotel |
 
-The bookings table points at the date table two times. Once for the arrival
-date, and once for the day the booking was cancelled.
+Separate date relationships support analysis by arrival date and
+cancellation date.
 
-## The room count
+## Estimated room capacity
 
-The data does not say how many rooms each hotel has. So I estimated it. I
-looked for the night with the most rooms occupied. That gives 226 rooms for
-the city hotel and 187 for the resort.
+The source does not include room capacity. I estimated it from the busiest
+occupied night: 226 rooms for the city hotel and 187 for the resort.
+Occupancy and RevPAR depend on these estimates.
 
-Occupancy is rooms sold divided by rooms available. Rooms available is the
-room count times the days in the month. A common mistake is to divide by
-booked nights instead. That gives 100 percent every month. There is a test
-that fails if occupancy ever reaches 100 percent.
+Occupancy divides occupied room nights by available room nights, using
+room capacity multiplied by the number of days. A test guards against
+a denominator error that would produce 100 percent occupancy every month
+in this dataset.
 
-## The late cancellation rate
+## Late cancellations
 
-37 percent of all bookings cancel. But most of them cancel weeks before
-arrival, and the hotel sells the room again. For overbooking, the rate that
-matters is different. It is how many bookings that are still active a few
-days before arrival still cancel or do not show up.
+The overall cancellation rate includes bookings cancelled well before
+arrival. For overbooking scenarios, the calculator instead uses the share
+of bookings still active near arrival that later cancel or do not show up.
 
-`build.py` computes this for 1, 3, 7, 14, and 30 days before arrival. The
-overbooking tool uses it as the default.
+The build calculates this rate at 1, 3, 7, 14, and 30 days before arrival.
+Users can select a timeframe or enter a different rate.
 
-## The overbooking tool
+## Overbooking assumptions
 
-For each number of extra bookings, the tool assumes each booking cancels on
-its own with the rate you set. It works out the chance of each number of
-guests showing up. Then it adds up the expected cost of empty rooms and of
-guests sent away. The lowest expected cost is the answer. It is about 20
-lines in `site/app.js`, in the function `expectedCost`.
+The calculator assumes each booking cancels independently at the selected
+rate. For each number of extra bookings, it calculates expected empty
+rooms and relocated guests, then applies the costs entered by the user.
+
+The lowest-cost result is a model estimate under those assumptions, not an
+operational recommendation. The default empty-room cost uses ADR; the
+relocation cost is illustrative. Annual cost differences assume the same
+conditions every night and should not be read as forecast savings.
+
+The calculation is in `expectedCost` in `site/app.js`.
 
 ## Tests
 
@@ -106,12 +105,12 @@ lines in `site/app.js`, in the function `expectedCost`.
 pytest
 ```
 
-Eight tests. Every booking is in the fact table. The date table has no gaps.
-Every key points at a real row. There is one night row for each occupied
-room night. The room count is the busiest night. Occupancy is below 100
-percent. RevPAR equals ADR times occupancy. And the headline numbers match.
+Tests cover booking counts, date continuity, valid keys, occupied room
+nights, capacity estimates, occupancy, the RevPAR identity, and headline
+totals.
 
-## Data
+## Data source
 
-Hotel booking demand, by Nuno Antonio, Ana de Almeida and Luis Nunes. Data in
-Brief, 2019. CC BY 4.0. The build downloads it from the TidyTuesday mirror.
+Hotel booking demand, by Nuno Antonio, Ana de Almeida and Luis Nunes.
+Published in Data in Brief, 2019, under CC BY 4.0. The build downloads the
+data from the TidyTuesday mirror.
